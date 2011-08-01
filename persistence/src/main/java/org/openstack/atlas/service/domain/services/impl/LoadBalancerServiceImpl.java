@@ -1,5 +1,6 @@
 package org.openstack.atlas.service.domain.services.impl;
 
+import org.openstack.atlas.docs.loadbalancers.api.v1.NodeType;
 import org.openstack.atlas.service.domain.entities.*;
 import org.openstack.atlas.service.domain.entities.Host;
 import org.openstack.atlas.service.domain.entities.HostStatus;
@@ -444,6 +445,9 @@ public class LoadBalancerServiceImpl extends BaseService implements LoadBalancer
         for (Node node : loadBalancer.getNodes()) {
             if (node.getWeight() == null) {
                 node.setWeight(Constants.DEFAULT_NODE_WEIGHT);
+            }
+            if (node.getType() == null) {
+                node.setType(NodeType.PRIMARY);
             }
         }
     }

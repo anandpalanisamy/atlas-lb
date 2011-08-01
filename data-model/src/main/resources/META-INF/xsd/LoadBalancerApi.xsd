@@ -113,6 +113,7 @@
         <xsd:attribute name="condition" type="tns:nodeCondition"/>
         <xsd:attribute name="status" type="tns:nodeStatus"/>
         <xsd:attribute name="weight" type="xsd:int"/>
+        <xsd:attribute name="type" type="tns:nodeType"/>
     </xsd:complexType>
 
     <xsd:element name="virtualIp" type="tns:virtualIp"/>
@@ -135,6 +136,13 @@
     <xsd:complexType name="algorithm">
         <xsd:attribute name="name" type="xsd:string"/>
     </xsd:complexType>
+
+    <xsd:simpleType name="nodeType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="PRIMARY"/>
+            <xsd:enumeration value="SECONDARY"/>
+        </xsd:restriction>
+    </xsd:simpleType>
 
     <xsd:simpleType name="nodeCondition">
         <xsd:restriction base="xsd:string">

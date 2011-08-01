@@ -1,5 +1,7 @@
 package org.openstack.atlas.service.domain.entities;
 
+import org.openstack.atlas.docs.loadbalancers.api.v1.NodeType;
+
 import javax.persistence.*;
 import java.io.Serializable;
 
@@ -22,6 +24,10 @@ public class Node extends Entity implements Serializable {
     private Integer weight;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "node_type", nullable = false)
+    private NodeType type;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "node_condition")
     private NodeCondition condition;
 
@@ -34,6 +40,7 @@ public class Node extends Entity implements Serializable {
 
     @Transient
     private boolean isToBeUpdated;
+
 
     public NodeCondition getCondition() {
         return condition;
@@ -73,6 +80,14 @@ public class Node extends Entity implements Serializable {
 
     public void setWeight(Integer weight) {
         this.weight = weight;
+    }
+
+    public NodeType getType() {
+        return type;
+    }
+
+    public void setType(NodeType type) {
+        this.type = type;
     }
 
     public NodeStatus getStatus() {

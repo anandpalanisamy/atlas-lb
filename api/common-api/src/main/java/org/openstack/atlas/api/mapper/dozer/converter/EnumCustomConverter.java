@@ -2,6 +2,7 @@ package org.openstack.atlas.api.mapper.dozer.converter;
 
 import org.openstack.atlas.docs.loadbalancers.api.v1.IpVersion;
 import org.openstack.atlas.docs.loadbalancers.api.v1.NetworkItemType;
+import org.openstack.atlas.docs.loadbalancers.api.v1.NodeType;
 import org.openstack.atlas.docs.loadbalancers.api.v1.PersistenceType;
 import org.openstack.atlas.service.domain.entities.*;
 import org.openstack.atlas.service.domain.exceptions.NoMappableConstantException;
@@ -43,6 +44,16 @@ public class EnumCustomConverter implements CustomConverter {
         // AlgorithmType -> String
         if(sourceFieldValue instanceof LoadBalancerAlgorithm && destinationClass == java.lang.String.class) {
             return ((LoadBalancerAlgorithm)sourceFieldValue).toString();
+        }
+
+        // NodeType -> String
+        if (sourceFieldValue instanceof NodeType && destinationClass == java.lang.String.class) {
+            return ((org.openstack.atlas.service.domain.entities.NodeType)sourceFieldValue).toString();
+        }
+
+        // String -> NodeType
+        if(sourceFieldValue instanceof java.lang.String && destinationClass == NodeType.class) {
+            return LoadBalancerStatus.valueOf((String)sourceFieldValue);
         }
 
         if (sourceFieldValue instanceof VirtualIp) {
