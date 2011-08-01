@@ -12,6 +12,7 @@ import org.openstack.atlas.api.validation.results.ValidatorResult;
 import org.openstack.atlas.api.validation.verifiers.MustBeIntegerInRange;
 import org.openstack.atlas.api.validation.verifiers.Verifier;
 import org.openstack.atlas.api.validation.verifiers.VerifierResult;
+import org.openstack.atlas.service.domain.entities.NodeType;
 
 import static org.openstack.atlas.api.validation.context.HttpRequestType.POST;
 import static org.openstack.atlas.api.validation.context.HttpRequestType.PUT;
@@ -30,6 +31,7 @@ public class NodeValidator implements ResourceValidator<Node> {
                 result(validationTarget().getCondition()).if_().exist().then().must().adhereTo(new MustBeInArray(NodeCondition.values())).withMessage("Node condition is invalid. Please specify a valid condition.");
                 result(validationTarget().getWeight()).if_().exist().then().must().adhereTo(new MustBeIntegerInRange(1, 100)).withMessage("Node weight is invalid. Range is 1-100. Please specify a valid weight.");
                 result(validationTarget().getStatus()).must().not().exist().withMessage("Node status field cannot be modified.");
+                result(validationTarget().getType()).if_().exist().then().must().adhereTo(new MustBeInArray(NodeType.values())).withMessage("Node type is invalid. Please specify a valid type.");
                 result(validationTarget().getId()).must().not().exist().withMessage("Node id field cannot be modified.");
                 must().adhereTo(new Verifier<Node>() {
                     @Override

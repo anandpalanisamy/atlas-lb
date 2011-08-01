@@ -2,6 +2,7 @@ package org.openstack.atlas.api.validation.validators;
 
 import org.openstack.atlas.api.validation.Validator;
 import org.openstack.atlas.api.validation.ValidatorBuilder;
+import org.openstack.atlas.api.validation.context.NodeTypeContext;
 import org.openstack.atlas.api.validation.results.ValidatorResult;
 import org.openstack.atlas.api.validation.verifiers.*;
 import org.openstack.atlas.docs.loadbalancers.api.v1.AlgorithmType;

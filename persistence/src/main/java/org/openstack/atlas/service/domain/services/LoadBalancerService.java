@@ -40,7 +40,7 @@ public interface LoadBalancerService {
     public SessionPersistence getSessionPersistenceByAccountIdLoadBalancerId(Integer accountId, Integer loadbalancerId) throws EntityNotFoundException, DeletedStatusException, BadRequestException;
 
     /* Mutable method */
-    public void addDefaultValues(LoadBalancer loadBalancer);
+    public void addDefaultValues(LoadBalancer loadBalancer) throws BadRequestException;
 
     public Boolean isLoadBalancerLimitReached(Integer accountId);
     

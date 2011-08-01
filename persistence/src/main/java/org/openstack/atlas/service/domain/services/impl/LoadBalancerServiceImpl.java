@@ -418,7 +418,7 @@ public class LoadBalancerServiceImpl extends BaseService implements LoadBalancer
     }
 
     @Override
-    public void addDefaultValues(LoadBalancer loadBalancer) {
+    public void addDefaultValues(LoadBalancer loadBalancer) throws BadRequestException {
         loadBalancer.setStatus(BUILD);
         NodesHelper.setNodesToStatus(loadBalancer, NodeStatus.ONLINE);
         if (loadBalancer.getAlgorithm() == null) {
@@ -446,7 +446,10 @@ public class LoadBalancerServiceImpl extends BaseService implements LoadBalancer
             if (node.getWeight() == null) {
                 node.setWeight(Constants.DEFAULT_NODE_WEIGHT);
             }
-            if (node.getType() == null) {
+
+            if (node.getType() != null && node.getType() == NodeType.SECONDARY) {
+                throw new BadRequestException("The node(s) must be specified as primary node(s) while creating a loadbalancer.");
+            } else {
                 node.setType(NodeType.PRIMARY);
             }
         }
