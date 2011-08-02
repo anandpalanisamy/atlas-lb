@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
+import org.openstack.atlas.docs.loadbalancers.api.v1.NodeType;
 
 import static org.openstack.atlas.api.validation.context.HttpRequestType.POST;
 import static org.openstack.atlas.api.validation.context.HttpRequestType.PUT;
@@ -35,6 +36,12 @@ public class NodeValidatorTest {
 
         @Test
         public void shouldAcceptValidNode() {
+            assertTrue(validator.validate(node, POST).passedValidation());
+        }
+
+        @Test
+        public void shouldAcceptValidNodeWithType() {
+            node.setType(NodeType.PRIMARY);
             assertTrue(validator.validate(node, POST).passedValidation());
         }
 
@@ -195,8 +202,22 @@ public class NodeValidatorTest {
         }
 
         @Test
+        public void shouldAcceptValidNodeWithType() {
+            node.setType(NodeType.PRIMARY);
+            ValidatorResult result = validator.validate(node, PUT);
+            assertTrue(result.passedValidation());
+        }
+
+        @Test
         public void shouldAcceptWhenOnlyConditionIsSet() {
             node.setWeight(null);
+            ValidatorResult result = validator.validate(node, PUT);
+            assertTrue(result.passedValidation());
+        }
+
+        @Test
+        public void shouldAcceptWhenOnlyTypeIsSet() {
+            node.setType(NodeType.PRIMARY);
             ValidatorResult result = validator.validate(node, PUT);
             assertTrue(result.passedValidation());
         }
