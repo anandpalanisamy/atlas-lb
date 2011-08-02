@@ -2,6 +2,7 @@ package org.openstack.atlas.service.domain.services;
 
 import org.openstack.atlas.service.domain.entities.LoadBalancer;
 import org.openstack.atlas.service.domain.entities.Node;
+import org.openstack.atlas.service.domain.entities.NodeType;
 import org.openstack.atlas.service.domain.exceptions.*;
 import org.openstack.atlas.service.domain.pojos.NodeMap;
 import java.util.Collection;
@@ -17,7 +18,11 @@ public interface NodeService {
 
     public Set<Node> createNodes(LoadBalancer loadBalancer) throws EntityNotFoundException, ImmutableEntityException, UnprocessableEntityException, BadRequestException;
 
-    public LoadBalancer updateNode(LoadBalancer loadBalancer) throws EntityNotFoundException, ImmutableEntityException, UnprocessableEntityException;
+    public LoadBalancer updateNode(LoadBalancer loadBalancer) throws EntityNotFoundException, ImmutableEntityException, UnprocessableEntityException, BadRequestException;
+
+    public void verifyNodeType(Node nodeToUpdate, Node nodeInDbToUpdate, LoadBalancer dbLoadBalancer) throws BadRequestException;
+
+    public List<Node> getNodesByType(Collection<Node> nodes, NodeType nodeType);
 
     public void updateNodeStatus(Node node);
 

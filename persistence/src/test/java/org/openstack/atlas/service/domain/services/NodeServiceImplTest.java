@@ -1,6 +1,7 @@
 package org.openstack.atlas.service.domain.services;
 
 import org.openstack.atlas.service.domain.entities.*;
+import org.openstack.atlas.service.domain.exceptions.BadRequestException;
 import org.openstack.atlas.service.domain.exceptions.EntityNotFoundException;
 import org.openstack.atlas.service.domain.repository.LoadBalancerRepository;
 import org.openstack.atlas.service.domain.repository.NodeRepository;
@@ -114,6 +115,15 @@ public class NodeServiceImplTest {
             node2.setCondition(NodeCondition.ENABLED);
             lb.addNode(node2);
             Assert.assertTrue(nodeService.nodeToDeleteIsNotLastActive(lb,  node));
+        }
+
+        @Test(expected = BadRequestException.class)
+        public void shouldFailIfUpdatingLastPrimaryToSecondary() throws BadRequestException {
+            node.setType(NodeType.PRIMARY);
+            Node requestNode = new Node();
+            requestNode.setType(NodeType.SECONDARY);
+
+            nodeService.verifyNodeType(requestNode, node, lb);
         }
     }
 }

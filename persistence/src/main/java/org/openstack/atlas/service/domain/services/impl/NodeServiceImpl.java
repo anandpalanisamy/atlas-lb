@@ -136,7 +136,7 @@ public class NodeServiceImpl extends BaseService implements NodeService {
 
     @Override
     @Transactional
-    public LoadBalancer updateNode(LoadBalancer loadBalancer) throws EntityNotFoundException, ImmutableEntityException, UnprocessableEntityException {
+    public LoadBalancer updateNode(LoadBalancer loadBalancer) throws EntityNotFoundException, ImmutableEntityException, UnprocessableEntityException, BadRequestException {
         LoadBalancer dbLoadBalancer = loadBalancerRepository.getByIdAndAccountId(loadBalancer.getId(), loadBalancer.getAccountId());
 
         Node nodeToUpdate = loadBalancer.getNodes().iterator().next();
@@ -174,6 +174,10 @@ public class NodeServiceImpl extends BaseService implements NodeService {
                 if (nodeToUpdate.getWeight() != null) {
                     n.setWeight(nodeToUpdate.getWeight());
                 }
+                if(nodeToUpdate.getType() != null) {
+                    verifyNodeType(nodeToUpdate, n, dbLoadBalancer);
+                    n.setType(nodeToUpdate.getType());
+                }
                 n.setToBeUpdated(true);
                 break;
             }
@@ -185,6 +189,27 @@ public class NodeServiceImpl extends BaseService implements NodeService {
 
         nodeRepository.update(dbLoadBalancer);
         return dbLoadBalancer;
+    }
+
+    @Override
+    public void verifyNodeType(Node nodeToUpdate, Node nodeInDbToUpdate, LoadBalancer dbLoadBalancer) throws BadRequestException {
+        if (nodeToUpdate.getType() == NodeType.SECONDARY) {
+            List<Node> currentNodes = getNodesByType(dbLoadBalancer.getNodes(), NodeType.PRIMARY);
+            if (nodeInDbToUpdate.getType() == NodeType.PRIMARY && currentNodes.size() <= 1) {
+                throw new BadRequestException("One primary node must remain as the last node.");
+            }
+        }
+    }
+
+    @Override
+    public List<Node> getNodesByType(Collection<Node> nodes, NodeType nodeType) {
+        List<Node> nodesWithType = new ArrayList<Node>();
+        for (Node node : nodes) {
+            if (node.getType().equals(nodeType)) {
+                nodesWithType.add(node);
+            }
+        }
+        return nodesWithType;
     }
 
     @Override

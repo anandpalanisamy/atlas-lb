@@ -120,6 +120,7 @@ public class NodesResource extends CommonDependencyProvider {
             for (Node node : dbnodes) {
                 returnNodes.getNodes().add(dozerMapper.map(node, org.openstack.atlas.docs.loadbalancers.api.v1.Node.class));
             }
+
             asyncService.callAsyncLoadBalancingOperation(Operation.CREATE_NODES, domainLb);
             return Response.status(Response.Status.ACCEPTED).entity(returnNodes).build();
         } catch (Exception e) {
