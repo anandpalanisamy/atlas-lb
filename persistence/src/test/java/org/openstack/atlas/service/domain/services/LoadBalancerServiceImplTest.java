@@ -1,6 +1,15 @@
 package org.openstack.atlas.service.domain.services;
 
+import org.openstack.atlas.docs.loadbalancers.api.v1.*;
+import org.openstack.atlas.docs.loadbalancers.api.v1.NodeType;
 import org.openstack.atlas.service.domain.entities.*;
+import org.openstack.atlas.service.domain.entities.LoadBalancer;
+import org.openstack.atlas.service.domain.entities.LoadBalancerStatus;
+import org.openstack.atlas.service.domain.entities.Node;
+import org.openstack.atlas.service.domain.entities.NodeCondition;
+import org.openstack.atlas.service.domain.entities.NodeStatus;
+import org.openstack.atlas.service.domain.entities.SessionPersistence;
+import org.openstack.atlas.service.domain.exceptions.BadRequestException;
 import org.openstack.atlas.service.domain.exceptions.EntityNotFoundException;
 import org.openstack.atlas.service.domain.repository.AccountLimitRepository;
 import org.openstack.atlas.service.domain.repository.LoadBalancerRepository;
@@ -121,7 +130,7 @@ public class LoadBalancerServiceImplTest {
         }
 
         @Test
-        public void shouldAddDefaultValuesWhenNoValuesAreSet() {
+        public void shouldAddDefaultValuesWhenNoValuesAreSet() throws BadRequestException {
             lbService.addDefaultValues(lb);
 
             Assert.assertEquals(LoadBalancerAlgorithm.RANDOM, lb.getAlgorithm());
@@ -133,7 +142,7 @@ public class LoadBalancerServiceImplTest {
         }
 
         @Test
-        public void shouldNotAddDefaultValuesWhenValuesAreSet() {
+        public void shouldNotAddDefaultValuesWhenValuesAreSet() throws BadRequestException {
             lb.setAlgorithm(LoadBalancerAlgorithm.LEAST_CONNECTIONS);
             lb.setProtocol(LoadBalancerProtocol.IMAPv3);
             lb.setConnectionLogging(true);
@@ -150,7 +159,7 @@ public class LoadBalancerServiceImplTest {
         }
 
         @Test
-        public void shouldSetStatusToBuildWhenStatusIsModified() {
+        public void shouldSetStatusToBuildWhenStatusIsModified() throws BadRequestException {
             lb.setStatus(LoadBalancerStatus.ERROR);
 
             lbService.addDefaultValues(lb);
@@ -159,7 +168,7 @@ public class LoadBalancerServiceImplTest {
         }
 
         @Test
-        public void shouldUpdateNodesStatusAndWeightsAppropriately() {
+        public void shouldUpdateNodesStatusAndWeightsAppropriately() throws BadRequestException {
             Set<Node> nodes = new HashSet<Node>();
             Node node1 = new Node();
             Node node2 = new Node();
@@ -185,6 +194,39 @@ public class LoadBalancerServiceImplTest {
             Assert.assertEquals(1, node1.getWeight().intValue());
             Assert.assertEquals(0, node2.getWeight().intValue());
             Assert.assertEquals(10, node3.getWeight().intValue());
+        }
+
+        @Test
+        public void shouldUpdateNodesTypeAppropriately() throws BadRequestException {
+            Set<Node> nodes = new HashSet<Node>();
+            Node node1 = new Node();
+            Node node2 = new Node();
+
+            node1.setType(org.openstack.atlas.docs.loadbalancers.api.v1.NodeType.PRIMARY);
+            node2.setType(null);
+
+            nodes.add(node1);
+            nodes.add(node2);
+            lb.setNodes(nodes);
+
+            lbService.addDefaultValues(lb);
+
+            Assert.assertEquals(NodeType.PRIMARY, node1.getType());
+            Assert.assertEquals(NodeType.PRIMARY, node2.getType());
+        }
+
+        @Test(expected = BadRequestException.class)
+        public void shouldFailNodesTypeSecondary() throws BadRequestException {
+            Set<Node> nodes = new HashSet<Node>();
+            Node node1 = new Node();
+
+            node1.setType(NodeType.SECONDARY);
+
+            nodes.add(node1);
+            lb.setNodes(nodes);
+
+            lbService.addDefaultValues(lb);
+
         }
     }
 }

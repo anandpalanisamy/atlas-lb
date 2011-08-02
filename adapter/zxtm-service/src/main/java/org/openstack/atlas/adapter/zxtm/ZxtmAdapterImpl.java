@@ -8,7 +8,16 @@ import org.openstack.atlas.adapter.helpers.IpHelper;
 import org.openstack.atlas.adapter.helpers.NodeHelper;
 import org.openstack.atlas.adapter.helpers.TrafficScriptHelper;
 import org.openstack.atlas.adapter.service.ReverseProxyLoadBalancerAdapter;
+import org.openstack.atlas.docs.loadbalancers.api.v1.*;
 import org.openstack.atlas.service.domain.entities.*;
+import org.openstack.atlas.service.domain.entities.AccessList;
+import org.openstack.atlas.service.domain.entities.HealthMonitor;
+import org.openstack.atlas.service.domain.entities.HealthMonitorType;
+import org.openstack.atlas.service.domain.entities.LoadBalancer;
+import org.openstack.atlas.service.domain.entities.Node;
+import org.openstack.atlas.service.domain.entities.NodeCondition;
+import org.openstack.atlas.service.domain.entities.NodeType;
+import org.openstack.atlas.service.domain.entities.SessionPersistence;
 import org.openstack.atlas.service.domain.pojos.Cidr;
 import org.openstack.atlas.service.domain.pojos.Hostssubnet;
 import org.openstack.atlas.service.domain.pojos.Hostsubnet;
@@ -600,10 +609,27 @@ public class ZxtmAdapterImpl implements ReverseProxyLoadBalancerAdapter {
     }
 
     @Override
-    public void setNodes(LoadBalancerEndpointConfiguration config, Integer lbId, Integer accountId, Collection<Node> nodes)
+    public void setNodes(LoadBalancerEndpointConfiguration config, Integer lbId, Integer accountId, Collection<Node> nodes) throws RemoteException, InsufficientRequestException, ZxtmRollBackException {
+        final String rollBackMessage = "Set nodes request canceled.";
+        ZxtmServiceStubs serviceStubs = getServiceStubs(config);
+        final String primaryPool = ZxtmNameBuilder.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
+        final String secondaryPool = ZxtmNameBuilder.generateNameWithAccountIdAndLoadBalancerIdForSecondaryNodes(lbId, accountId);
+
+        List<Node> primaryNodes = getNodesByType(nodes, org.openstack.atlas.docs.loadbalancers.api.v1.NodeType.PRIMARY);
+        if (primaryNodes.size() > 0) {
+            setNodes(config, lbId, accountId, primaryPool, primaryNodes);
+        }
+
+        List<Node> secondaryNodes = getNodesByType(nodes, org.openstack.atlas.docs.loadbalancers.api.v1.NodeType.SECONDARY);
+        if (secondaryNodes.size() > 0) {
+            createSecondaryNodePool(config, lbId, accountId, secondaryNodes);
+        }
+        serviceStubs.getPoolBinding().setFailpool(new String[]{primaryPool}, new String[]{secondaryPool});
+    }
+
+    public void setNodes(LoadBalancerEndpointConfiguration config, Integer lbId, Integer accountId, String poolName, Collection<Node> nodes)
             throws RemoteException, InsufficientRequestException, ZxtmRollBackException {
         ZxtmServiceStubs serviceStubs = getServiceStubs(config);
-        final String poolName = ZxtmNameBuilder.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
         final String rollBackMessage = "Set nodes request canceled.";
         final String[][] enabledNodesBackup;
         final String[][] disabledNodesBackup;
@@ -1212,6 +1238,27 @@ public class ZxtmAdapterImpl implements ReverseProxyLoadBalancerAdapter {
         setNodeWeights(config, loadBalancerId, accountId, allNodes);
     }
 
+    private void createSecondaryNodePool(LoadBalancerEndpointConfiguration config, Integer loadBalancerId, Integer accountId, Collection<Node> nodes) throws RemoteException, InsufficientRequestException, ZxtmRollBackException {
+        ZxtmServiceStubs serviceStubs = getServiceStubs(config);
+        final String poolName = ZxtmNameBuilder.generateNameWithAccountIdAndLoadBalancerIdForSecondaryNodes(loadBalancerId, accountId);
+
+        try {
+        LOG.debug(String.format("Creating secondary pool '%s' and setting failover nodes...", poolName));
+        serviceStubs.getPoolBinding().addPool(new String[]{poolName}, NodeHelper.getIpAddressesFromNodes(nodes));
+
+        setDisabledNodes(config, poolName, getNodesWithCondition(nodes, NodeCondition.DISABLED));
+        setDrainingNodes(config, poolName, getNodesWithCondition(nodes, NodeCondition.DRAINING));
+        setNodeWeights(config, loadBalancerId, accountId, nodes);
+        } catch (Exception e) {
+                if (e instanceof ObjectAlreadyExists) {
+                    LOG.error(String.format("Cannot create secondary pool '%s as it already exists...ignoring Axis Fault error...", poolName), e);
+                    setNodes(config, loadBalancerId, accountId, poolName, nodes);
+                } else {
+                    throw new ZxtmRollBackException("An error occurred while setting secondary nodes.", e);
+                }
+        }
+    }
+
     private List<Node> getNodesWithCondition(Collection<Node> nodes, NodeCondition nodeCondition) {
         List<Node> nodesWithCondition = new ArrayList<Node>();
         for (Node node : nodes) {
@@ -1220,6 +1267,16 @@ public class ZxtmAdapterImpl implements ReverseProxyLoadBalancerAdapter {
             }
         }
         return nodesWithCondition;
+    }
+
+    private List<Node> getNodesByType(Collection<Node> nodes, org.openstack.atlas.docs.loadbalancers.api.v1.NodeType nodeType) {
+        List<Node> nodesWithType = new ArrayList<Node>();
+        for (Node node : nodes) {
+            if (node.getType().equals(nodeType)) {
+                nodesWithType.add(node);
+            }
+        }
+        return nodesWithType;
     }
 
     /*

@@ -19,6 +19,7 @@ public final class EntryHelper {
         atomSummary.append("port: '").append(node.getPort()).append("', ");
         atomSummary.append("condition: '").append(node.getCondition()).append("', ");
         atomSummary.append("weight: '").append(node.getWeight()).append("'");
+        atomSummary.append("type: '").append(node.getType()).append("'");
         return atomSummary.toString();
     }
 

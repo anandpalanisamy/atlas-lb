@@ -31,7 +31,6 @@ public class NodeValidator implements ResourceValidator<Node> {
                 result(validationTarget().getCondition()).if_().exist().then().must().adhereTo(new MustBeInArray(NodeCondition.values())).withMessage("Node condition is invalid. Please specify a valid condition.");
                 result(validationTarget().getWeight()).if_().exist().then().must().adhereTo(new MustBeIntegerInRange(1, 100)).withMessage("Node weight is invalid. Range is 1-100. Please specify a valid weight.");
                 result(validationTarget().getStatus()).must().not().exist().withMessage("Node status field cannot be modified.");
-                result(validationTarget().getType()).if_().exist().then().must().adhereTo(new MustBeInArray(NodeType.values())).withMessage("Node type is invalid. Please specify a valid type.");
                 result(validationTarget().getId()).must().not().exist().withMessage("Node id field cannot be modified.");
                 must().adhereTo(new Verifier<Node>() {
                     @Override
@@ -74,6 +73,8 @@ public class NodeValidator implements ResourceValidator<Node> {
                 result(validationTarget().getAddress()).must().exist().forContext(POST).withMessage("Must provide a valid ip for the node.");
                 result(validationTarget().getPort()).must().exist().forContext(POST).withMessage("Must provide a valid port for the node.");
                 result(validationTarget().getCondition()).must().exist().forContext(POST).withMessage("Must provide a valid condition for the node.");
+                result(validationTarget().getType()).if_().exist().then().must().adhereTo(new MustBeInArray(org.openstack.atlas.docs.loadbalancers.api.v1.NodeType.values())).forContext(POST).withMessage("Node type is invalid. Please specify a valid type.");
+
 
                 // PUT EXPECTATIONS
                 result(validationTarget().getAddress()).must().not().exist().forContext(PUT).withMessage("Node ip field cannot be modified.");
