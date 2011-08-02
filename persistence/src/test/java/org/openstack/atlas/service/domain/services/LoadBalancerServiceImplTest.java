@@ -1,7 +1,5 @@
 package org.openstack.atlas.service.domain.services;
 
-import org.openstack.atlas.docs.loadbalancers.api.v1.*;
-import org.openstack.atlas.docs.loadbalancers.api.v1.NodeType;
 import org.openstack.atlas.service.domain.entities.*;
 import org.openstack.atlas.service.domain.entities.LoadBalancer;
 import org.openstack.atlas.service.domain.entities.LoadBalancerStatus;
@@ -202,7 +200,7 @@ public class LoadBalancerServiceImplTest {
             Node node1 = new Node();
             Node node2 = new Node();
 
-            node1.setType(org.openstack.atlas.docs.loadbalancers.api.v1.NodeType.PRIMARY);
+            node1.setType(NodeType.PRIMARY);
             node2.setType(null);
 
             nodes.add(node1);

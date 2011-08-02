@@ -1,13 +1,13 @@
 package org.openstack.atlas.service.domain.services.impl;
 
 import org.openstack.atlas.docs.loadbalancers.api.v1.*;
-import org.openstack.atlas.docs.loadbalancers.api.v1.NodeType;
 import org.openstack.atlas.service.domain.entities.*;
 import org.openstack.atlas.service.domain.entities.LoadBalancer;
 import org.openstack.atlas.service.domain.entities.LoadBalancerStatus;
 import org.openstack.atlas.service.domain.entities.Node;
 import org.openstack.atlas.service.domain.entities.NodeCondition;
 import org.openstack.atlas.service.domain.entities.NodeStatus;
+import org.openstack.atlas.service.domain.entities.NodeType;
 import org.openstack.atlas.service.domain.exceptions.*;
 import org.openstack.atlas.service.domain.pojos.NodeMap;
 import org.openstack.atlas.service.domain.services.AccountLimitService;

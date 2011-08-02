@@ -615,12 +615,12 @@ public class ZxtmAdapterImpl implements ReverseProxyLoadBalancerAdapter {
         final String primaryPool = ZxtmNameBuilder.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
         final String secondaryPool = ZxtmNameBuilder.generateNameWithAccountIdAndLoadBalancerIdForSecondaryNodes(lbId, accountId);
 
-        List<Node> primaryNodes = getNodesByType(nodes, org.openstack.atlas.docs.loadbalancers.api.v1.NodeType.PRIMARY);
+        List<Node> primaryNodes = NodeHelper.getNodesByType(nodes, NodeType.PRIMARY);
         if (primaryNodes.size() > 0) {
             setNodes(config, lbId, accountId, primaryPool, primaryNodes);
         }
 
-        List<Node> secondaryNodes = getNodesByType(nodes, org.openstack.atlas.docs.loadbalancers.api.v1.NodeType.SECONDARY);
+        List<Node> secondaryNodes = NodeHelper.getNodesByType(nodes, NodeType.SECONDARY);
         if (secondaryNodes.size() > 0) {
             createSecondaryNodePool(config, lbId, accountId, secondaryNodes);
         }
@@ -1267,16 +1267,6 @@ public class ZxtmAdapterImpl implements ReverseProxyLoadBalancerAdapter {
             }
         }
         return nodesWithCondition;
-    }
-
-    private List<Node> getNodesByType(Collection<Node> nodes, org.openstack.atlas.docs.loadbalancers.api.v1.NodeType nodeType) {
-        List<Node> nodesWithType = new ArrayList<Node>();
-        for (Node node : nodes) {
-            if (node.getType().equals(nodeType)) {
-                nodesWithType.add(node);
-            }
-        }
-        return nodesWithType;
     }
 
     /*

@@ -1,7 +1,5 @@
 package org.openstack.atlas.service.domain.services.impl;
 
-import org.openstack.atlas.docs.loadbalancers.api.v1.*;
-import org.openstack.atlas.docs.loadbalancers.api.v1.NodeType;
 import org.openstack.atlas.service.domain.entities.*;
 import org.openstack.atlas.service.domain.entities.HealthMonitorType;
 import org.openstack.atlas.service.domain.entities.Host;

@@ -1,6 +1,7 @@
 package org.openstack.atlas.adapter.helpers;
 
 import org.openstack.atlas.service.domain.entities.Node;
+import org.openstack.atlas.service.domain.entities.NodeType;
 import org.openstack.atlas.util.converters.StringConverter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,5 +38,15 @@ public class NodeHelper {
     public static String getNodeIdsStr(Collection<Node> nodes) {
         List<Integer> ids = getNodeIds(nodes);
         return StringConverter.integersAsString(ids);
+    }
+
+    public static List<Node> getNodesByType(Collection<Node> nodes, NodeType nodeType) {
+        List<Node> nodesWithType = new ArrayList<Node>();
+        for (Node node : nodes) {
+            if (node.getType().equals(nodeType)) {
+                nodesWithType.add(node);
+            }
+        }
+        return nodesWithType;
     }
 }

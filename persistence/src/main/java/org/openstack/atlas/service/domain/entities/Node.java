@@ -1,7 +1,5 @@
 package org.openstack.atlas.service.domain.entities;
 
-import org.openstack.atlas.docs.loadbalancers.api.v1.NodeType;
-
 import javax.persistence.*;
 import java.io.Serializable;
 
@@ -25,7 +23,7 @@ public class Node extends Entity implements Serializable {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "node_type", nullable = false)
-    private NodeType type;
+    private NodeType type = NodeType.PRIMARY;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "node_condition")
