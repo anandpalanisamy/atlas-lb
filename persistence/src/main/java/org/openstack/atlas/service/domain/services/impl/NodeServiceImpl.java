@@ -193,12 +193,20 @@ public class NodeServiceImpl extends BaseService implements NodeService {
 
     @Override
     public void verifyNodeType(Node nodeToUpdate, Node nodeInDbToUpdate, LoadBalancer dbLoadBalancer) throws BadRequestException {
+        List<Node> currentNodes = getNodesByType(dbLoadBalancer.getNodes(), NodeType.PRIMARY);
         if (nodeToUpdate.getType() == NodeType.SECONDARY) {
-            List<Node> currentNodes = getNodesByType(dbLoadBalancer.getNodes(), NodeType.PRIMARY);
-            if (nodeInDbToUpdate.getType() == NodeType.PRIMARY && currentNodes.size() <= 1) {
+            if ((nodeInDbToUpdate != null && nodeInDbToUpdate.getType() == NodeType.PRIMARY) && currentNodes.size() <= 1) {
                 throw new BadRequestException("One primary node must remain as the last node.");
             }
         }
+
+        if ((nodeInDbToUpdate == null && nodeToUpdate.getType() == NodeType.PRIMARY) && currentNodes.size() <= 1) {
+                throw new BadRequestException("One primary node must remain as the last node.");
+        }
+    }
+
+    public void verifyNodeType(Node nodeToUpdate, LoadBalancer dbLoadBalancer) throws BadRequestException {
+        verifyNodeType(nodeToUpdate, null, dbLoadBalancer);
     }
 
     @Override
@@ -220,7 +228,7 @@ public class NodeServiceImpl extends BaseService implements NodeService {
 
     @Override
     @Transactional
-    public LoadBalancer deleteNode(LoadBalancer loadBalancer) throws EntityNotFoundException, ImmutableEntityException, UnprocessableEntityException {
+    public LoadBalancer deleteNode(LoadBalancer loadBalancer) throws EntityNotFoundException, ImmutableEntityException, UnprocessableEntityException, BadRequestException {
         LoadBalancer dbLoadBalancer = loadBalancerRepository.getByIdAndAccountId(loadBalancer.getId(), loadBalancer.getAccountId());
 
 
@@ -234,12 +242,13 @@ public class NodeServiceImpl extends BaseService implements NodeService {
         isLbActive(dbLoadBalancer);
 
         Node nodeBeingDeleted = loadBalancer.getNodes().iterator().next();
-        LOG.debug("Verifying that we have an atleast one active node...");
-
+        LOG.debug("Verifying that we have at least one active node...");
         if (!nodeToDeleteIsNotLastActive(dbLoadBalancer, nodeBeingDeleted)) {
             LOG.warn("Last node on lb configured as ENABLED. Sending failure response back to client...");
             throw new UnprocessableEntityException("Last node on load balancer configured as ENABLED. One or more nodes must be configured as ENABLED.");
         }
+
+        verifyNodeType(nodeBeingDeleted, dbLoadBalancer);
 
         LOG.debug("Verifying that this is not the last node");
         if (dbLoadBalancer.getNodes().size() <= 1) {

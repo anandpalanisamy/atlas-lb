@@ -125,5 +125,26 @@ public class NodeServiceImplTest {
 
             nodeService.verifyNodeType(requestNode, node, lb);
         }
+
+        @Test(expected = BadRequestException.class)
+        public void shouldFailIfDeletingLastPrimary() throws BadRequestException {
+            node.setType(NodeType.PRIMARY);
+            Node requestNode = new Node();
+            requestNode.setType(NodeType.PRIMARY);
+
+            nodeService.verifyNodeType(requestNode, lb);
+        }
+
+        @Test
+        public void shouldPassIfDeletingLastSecondary() throws BadRequestException {
+            node.setType(NodeType.PRIMARY);
+            node2.setType(NodeType.SECONDARY);
+            lb.addNode(node2);
+
+            Node requestNode = new Node();
+            requestNode.setType(NodeType.SECONDARY);
+
+            nodeService.verifyNodeType(requestNode, lb);
+        }
     }
 }
