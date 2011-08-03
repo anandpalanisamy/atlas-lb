@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public final class ZxtmNameBuilder {
-    public static String FAILOVER_SUFFIX = "failover";
+    public static String FAIL_OVER_SUFFIX = "failover";
 
     public static String generateNameWithAccountIdAndLoadBalancerId(Integer lbId, Integer accountId) throws InsufficientRequestException {
         if (lbId == null) {
@@ -25,20 +25,9 @@ public final class ZxtmNameBuilder {
     public static String generatePoolName(Integer lbId, Integer accountId, boolean isFailOver) throws InsufficientRequestException {
         String poolName = generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
 
-        if (isFailOver) poolName = poolName + "_" + FAILOVER_SUFFIX;
+        if (isFailOver) poolName = poolName + "_" + FAIL_OVER_SUFFIX;
 
         return poolName;
-    }
-
-    public static String generateNameWithAccountIdAndLoadBalancerIdForSecondaryNodes(Integer lbId, Integer accountId) throws InsufficientRequestException {
-        if (lbId == null) {
-            throw new InsufficientRequestException("Missing id for load balancer.");
-        }
-        if (accountId == null) {
-            throw new InsufficientRequestException("Missing account id for load balancer.");
-        }
-
-        return accountId + "_" + lbId + "_secondary";
     }
 
     public static String generateNameWithAccountIdAndLoadBalancerId(LoadBalancer lb) throws InsufficientRequestException {

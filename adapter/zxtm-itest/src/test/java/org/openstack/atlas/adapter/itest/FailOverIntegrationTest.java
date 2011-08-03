@@ -40,13 +40,13 @@ public class FailOverIntegrationTest extends ZeusTestBase {
         failOverNode1.setIpAddress("128.0.0.1");
         failOverNode1.setPort(80);
         failOverNode1.setCondition(ENABLED);
-        failOverNode1.setType(NodeType.SECONDARY);
+        failOverNode1.setType(NodeType.FAIL_OVER);
 
         failOverNode2 = new Node();
         failOverNode2.setIpAddress("128.0.0.2");
         failOverNode2.setPort(81);
         failOverNode2.setCondition(DISABLED);
-        failOverNode2.setType(NodeType.SECONDARY);
+        failOverNode2.setType(NodeType.FAIL_OVER);
     }
 
     protected static String failOverPoolName() throws InsufficientRequestException {
@@ -55,11 +55,11 @@ public class FailOverIntegrationTest extends ZeusTestBase {
 
     @Test
     public void testSimpleFailOverOperations() throws ZxtmRollBackException, InsufficientRequestException, RemoteException {
-        shouldAddFailOverPoolWhenAddingASecondaryNode();
-//        shouldRemoveFailOverPoolWhenRemovingAllSecondaryNodes();
+        shouldAddFailOverPoolWhenAddingAFailOverNode();
+//        shouldRemoveFailOverPoolWhenRemovingAllFailOverNodes();
     }
 
-    private void shouldAddFailOverPoolWhenAddingASecondaryNode() throws ZxtmRollBackException, InsufficientRequestException, RemoteException {
+    private void shouldAddFailOverPoolWhenAddingAFailOverNode() throws ZxtmRollBackException, InsufficientRequestException, RemoteException {
         lb.getNodes().add(failOverNode1);
         lb.getNodes().add(failOverNode2);
 
@@ -67,7 +67,7 @@ public class FailOverIntegrationTest extends ZeusTestBase {
         assertFailOverSettings();
     }
 
-    private void shouldRemoveFailOverPoolWhenRemovingAllSecondaryNodes() throws ZxtmRollBackException, InsufficientRequestException, RemoteException {
+    private void shouldRemoveFailOverPoolWhenRemovingAllFailOverNodes() throws ZxtmRollBackException, InsufficientRequestException, RemoteException {
         lb.getNodes().remove(failOverNode1);
         lb.getNodes().remove(failOverNode2);
 

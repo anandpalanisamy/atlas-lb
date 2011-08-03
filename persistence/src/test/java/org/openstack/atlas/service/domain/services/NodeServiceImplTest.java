@@ -118,10 +118,10 @@ public class NodeServiceImplTest {
         }
 
         @Test(expected = BadRequestException.class)
-        public void shouldFailIfUpdatingLastPrimaryToSecondary() throws BadRequestException {
+        public void shouldFailIfUpdatingLastPrimaryToFailOver() throws BadRequestException {
             node.setType(NodeType.PRIMARY);
             Node requestNode = new Node();
-            requestNode.setType(NodeType.SECONDARY);
+            requestNode.setType(NodeType.FAIL_OVER);
 
             nodeService.verifyNodeType(requestNode, node, lb);
         }

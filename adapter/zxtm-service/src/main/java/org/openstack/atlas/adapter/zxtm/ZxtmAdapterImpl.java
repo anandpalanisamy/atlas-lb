@@ -604,7 +604,7 @@ public class ZxtmAdapterImpl implements ReverseProxyLoadBalancerAdapter {
         final String primaryPoolName = ZxtmNameBuilder.generatePoolName(lbId, accountId, false);
         final String failOverPoolName = ZxtmNameBuilder.generatePoolName(lbId, accountId, true);
         List<Node> primaryNodes = NodeHelper.getNodesByType(nodes, NodeType.PRIMARY);
-        List<Node> failOverNodes = NodeHelper.getNodesByType(nodes, NodeType.SECONDARY);
+        List<Node> failOverNodes = NodeHelper.getNodesByType(nodes, NodeType.FAIL_OVER);
 
         if (primaryNodes.isEmpty()) {
             throw new InsufficientRequestException("No primary nodes given. Please provide at least one primary node.");
@@ -690,7 +690,7 @@ public class ZxtmAdapterImpl implements ReverseProxyLoadBalancerAdapter {
         final String primaryPoolName = ZxtmNameBuilder.generatePoolName(lbId, accountId, false);
         final String failOverPoolName = ZxtmNameBuilder.generatePoolName(lbId, accountId, true);
         List<Node> primaryNodes = NodeHelper.getNodesByType(nodes, NodeType.PRIMARY);
-        List<Node> failOverNodes = NodeHelper.getNodesByType(nodes, NodeType.SECONDARY);
+        List<Node> failOverNodes = NodeHelper.getNodesByType(nodes, NodeType.FAIL_OVER);
 
         removeNodesForPool(config, primaryPoolName, primaryNodes);
         removeNodesForPool(config, failOverPoolName, failOverNodes);
@@ -743,7 +743,7 @@ public class ZxtmAdapterImpl implements ReverseProxyLoadBalancerAdapter {
         final String primaryPoolName = ZxtmNameBuilder.generatePoolName(lbId, accountId, false);
         final String failOverPoolName = ZxtmNameBuilder.generatePoolName(lbId, accountId, true);
         List<Node> primaryNodes = NodeHelper.getNodesByType(nodes, NodeType.PRIMARY);
-        List<Node> failOverNodes = NodeHelper.getNodesByType(nodes, NodeType.SECONDARY);
+        List<Node> failOverNodes = NodeHelper.getNodesByType(nodes, NodeType.FAIL_OVER);
 
         // TODO: Need to add backups and restore in case of exception
         setNodeWeightsForPool(config, primaryPoolName, primaryNodes);
@@ -1258,7 +1258,7 @@ public class ZxtmAdapterImpl implements ReverseProxyLoadBalancerAdapter {
         final String primaryPoolName = ZxtmNameBuilder.generatePoolName(loadBalancerId, accountId, false);
         final String failOverPoolName = ZxtmNameBuilder.generatePoolName(loadBalancerId, accountId, true);
         List<Node> primaryNodes = NodeHelper.getNodesByType(allNodes, NodeType.PRIMARY);
-        List<Node> failOverNodes = NodeHelper.getNodesByType(allNodes, NodeType.SECONDARY);
+        List<Node> failOverNodes = NodeHelper.getNodesByType(allNodes, NodeType.FAIL_OVER);
 
         if (primaryNodes.isEmpty())
             throw new InsufficientRequestException("No primary nodes given. Please provide at least one primary node.");

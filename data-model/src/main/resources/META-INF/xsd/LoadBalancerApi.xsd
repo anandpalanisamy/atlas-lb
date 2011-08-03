@@ -140,7 +140,7 @@
     <xsd:simpleType name="nodeType">
         <xsd:restriction base="xsd:string">
             <xsd:enumeration value="PRIMARY"/>
-            <xsd:enumeration value="SECONDARY"/>
+            <xsd:enumeration value="FAIL_OVER"/>
         </xsd:restriction>
     </xsd:simpleType>
 

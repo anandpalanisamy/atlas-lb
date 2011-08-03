@@ -1,6 +1,5 @@
 package org.openstack.atlas.service.domain.services.impl;
 
-import org.openstack.atlas.docs.loadbalancers.api.v1.*;
 import org.openstack.atlas.service.domain.entities.*;
 import org.openstack.atlas.service.domain.entities.LoadBalancer;
 import org.openstack.atlas.service.domain.entities.LoadBalancerStatus;
@@ -193,7 +192,7 @@ public class NodeServiceImpl extends BaseService implements NodeService {
 
     @Override
     public void verifyNodeType(Node nodeToUpdate, Node nodeInDbToUpdate, LoadBalancer dbLoadBalancer) throws BadRequestException {
-        if (nodeToUpdate.getType() == NodeType.SECONDARY) {
+        if (nodeToUpdate.getType() == NodeType.FAIL_OVER) {
             List<Node> currentNodes = getNodesByType(dbLoadBalancer.getNodes(), NodeType.PRIMARY);
             if (nodeInDbToUpdate.getType() == NodeType.PRIMARY && currentNodes.size() <= 1) {
                 throw new BadRequestException("One primary node must remain as the last node.");
