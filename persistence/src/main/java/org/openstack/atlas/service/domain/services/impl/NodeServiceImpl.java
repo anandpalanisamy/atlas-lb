@@ -251,14 +251,17 @@ public class NodeServiceImpl extends BaseService implements NodeService {
         return loadBalancer;
     }
 
+    /*
+    *  Returns true if any nodes match on ip address, port, and type.
+    */
     @Override
     public boolean detectDuplicateNodes(LoadBalancer dbLoadBalancer, LoadBalancer queueLb) {
         Set<String> ipAddressesAndPorts = new HashSet<String>();
         for (Node dbNode : dbLoadBalancer.getNodes()) {
-            ipAddressesAndPorts.add(dbNode.getIpAddress() + ":" + dbNode.getPort());
+            ipAddressesAndPorts.add(dbNode.getIpAddress() + ":" + dbNode.getPort() + dbNode.getType().name());
         }
         for (Node queueNode : queueLb.getNodes()) {
-            if (!ipAddressesAndPorts.add(queueNode.getIpAddress() + ":" + queueNode.getPort())) return true;
+            if (!ipAddressesAndPorts.add(queueNode.getIpAddress() + ":" + queueNode.getPort() + queueNode.getType().name())) return true;
         }
         return false;
     }
