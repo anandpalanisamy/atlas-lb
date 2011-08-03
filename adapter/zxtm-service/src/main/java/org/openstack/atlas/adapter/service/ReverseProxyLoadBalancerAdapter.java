@@ -51,7 +51,7 @@ public interface ReverseProxyLoadBalancerAdapter {
     public void removeNodes(LoadBalancerEndpointConfiguration config, Integer lbId, Integer accountId, Collection<Node> nodes)
             throws AxisFault, InsufficientRequestException, ZxtmRollBackException;
 
-    public void removeNode(LoadBalancerEndpointConfiguration config, Integer loadBalancerId, Integer accountId, String ipAddress, Integer port)
+    public void removeNode(LoadBalancerEndpointConfiguration config, Integer loadBalancerId, Integer accountId, String ipAddress, Integer port, NodeType nodeType)
             throws RemoteException, InsufficientRequestException, ZxtmRollBackException;
 
     public void setNodeWeights(LoadBalancerEndpointConfiguration config, Integer loadBalancerId, Integer accountId, Collection<Node> nodes)
