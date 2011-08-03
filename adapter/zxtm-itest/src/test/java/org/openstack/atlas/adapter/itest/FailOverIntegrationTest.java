@@ -56,7 +56,7 @@ public class FailOverIntegrationTest extends ZeusTestBase {
     @Test
     public void testSimpleFailOverOperations() throws ZxtmRollBackException, InsufficientRequestException, RemoteException {
         shouldAddFailOverPoolWhenAddingAFailOverNode();
-//        shouldRemoveFailOverPoolWhenRemovingAllFailOverNodes();
+//        shouldRemoveFailOverPoolWhenRemovingAllFailOverNodes(); // TODO: Waiting on Zeus bug fix
     }
 
     private void shouldAddFailOverPoolWhenAddingAFailOverNode() throws ZxtmRollBackException, InsufficientRequestException, RemoteException {
@@ -110,7 +110,7 @@ public class FailOverIntegrationTest extends ZeusTestBase {
     }
 
     @Test
-    public void shouldAddFailOverPoolWhenCreatingALoadBalancerWithSecondaryNodes() {
+    public void shouldAddFailOverPoolWhenCreatingALoadBalancerWithFailOverNodes() {
         try {
             removeLoadBalancer();
             lb.getNodes().add(failOverNode1);

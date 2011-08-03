@@ -34,7 +34,7 @@ public interface NodeService {
 
     public boolean areAddressesValidForUse(Set<Node> nodes, LoadBalancer dbLb);
 
-    public boolean nodeToDeleteIsNotLastActive(LoadBalancer lb, Node deleteNode);
+    public boolean isLastEnabledPrimaryNode(LoadBalancer lb, Node deleteNode);
 
     public NodeMap getNodeMap(Integer accountId,Integer loadbalancerId);
 

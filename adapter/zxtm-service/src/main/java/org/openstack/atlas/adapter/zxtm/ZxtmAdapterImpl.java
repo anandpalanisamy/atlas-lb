@@ -620,7 +620,7 @@ public class ZxtmAdapterImpl implements ReverseProxyLoadBalancerAdapter {
                 // TODO: Figure out error handling
             }
         } else {
-            serviceStubs.getPoolBinding().setFailpool(new String[]{primaryPoolName}, new String[]{""});
+            serviceStubs.getPoolBinding().setFailpool(new String[]{primaryPoolName}, new String[]{""}); // TODO (BUG): Waiting on Zeus fix
             deleteNodePool(serviceStubs, failOverPoolName);
         }
     }
