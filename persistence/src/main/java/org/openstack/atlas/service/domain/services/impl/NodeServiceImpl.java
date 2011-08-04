@@ -1,6 +1,5 @@
 package org.openstack.atlas.service.domain.services.impl;
 
-import org.openstack.atlas.docs.loadbalancers.api.v1.*;
 import org.openstack.atlas.service.domain.entities.*;
 import org.openstack.atlas.service.domain.entities.LoadBalancer;
 import org.openstack.atlas.service.domain.entities.LoadBalancerStatus;
@@ -194,8 +193,9 @@ public class NodeServiceImpl extends BaseService implements NodeService {
     @Override
     public void verifyNodeType(Node nodeToUpdate, Node nodeInDbToUpdate, LoadBalancer dbLoadBalancer) throws BadRequestException {
         List<Node> currentPrimaryNodes = getNodesByType(dbLoadBalancer.getNodes(), NodeType.PRIMARY);
-        if (nodeToUpdate.getType() == NodeType.SECONDARY) {
-            if ((nodeInDbToUpdate != null && nodeInDbToUpdate.getType() == NodeType.PRIMARY) && currentPrimaryNodes.size() <= 1) {
+      if (nodeToUpdate.getType() == NodeType.FAIL_OVER) {
+            List<Node> currentNodes = getNodesByType(dbLoadBalancer.getNodes(), NodeType.PRIMARY);
+            if (nodeInDbToUpdate.getType() == NodeType.PRIMARY && currentNodes.size() <= 1) {
                 throw new BadRequestException("One primary node must remain as the last node.");
             }
         }
@@ -235,20 +235,16 @@ public class NodeServiceImpl extends BaseService implements NodeService {
         Node nodeToDelete = loadBalancer.getNodes().iterator().next();
         if (!loadBalancerContainsNode(dbLoadBalancer, nodeToDelete)) {
             LOG.warn("Node to delete not found. Sending response to client...");
-            throw new EntityNotFoundException(String.format("Node with id #%d not found for loadbalancer #%d", nodeToDelete.getId(),
-                            loadBalancer.getId()));
+            throw new EntityNotFoundException(String.format("Node with id #%d not found for loadbalancer #%d", nodeToDelete.getId(), loadBalancer.getId()));
         }
 
         isLbActive(dbLoadBalancer);
 
-        Node nodeBeingDeleted = loadBalancer.getNodes().iterator().next();
-        LOG.debug("Verifying that we have at least one active node...");
-        if (!nodeToDeleteIsNotLastActive(dbLoadBalancer, nodeBeingDeleted)) {
-            LOG.warn("Last node on lb configured as ENABLED. Sending failure response back to client...");
-            throw new UnprocessableEntityException("Last node on load balancer configured as ENABLED. One or more nodes must be configured as ENABLED.");
+        LOG.debug("Verifying that we have an at least one ENABLED primary node...");
+        if (isLastEnabledPrimaryNode(dbLoadBalancer, nodeToDelete)) {
+            LOG.warn("Cannot delete last primary node on lb configured as ENABLED. Sending failure response back to client...");
+            throw new UnprocessableEntityException("Cannot delete last primary node on load balancer configured as ENABLED. One or more nodes must be configured as ENABLED.");
         }
-
-        verifyNodeType(nodeBeingDeleted, dbLoadBalancer);
 
         LOG.debug("Verifying that this is not the last node");
         if (dbLoadBalancer.getNodes().size() <= 1) {
@@ -264,14 +260,17 @@ public class NodeServiceImpl extends BaseService implements NodeService {
         return loadBalancer;
     }
 
+    /*
+    *  Returns true if any nodes match on ip address, port, and type.
+    */
     @Override
     public boolean detectDuplicateNodes(LoadBalancer dbLoadBalancer, LoadBalancer queueLb) {
         Set<String> ipAddressesAndPorts = new HashSet<String>();
         for (Node dbNode : dbLoadBalancer.getNodes()) {
-            ipAddressesAndPorts.add(dbNode.getIpAddress() + ":" + dbNode.getPort());
+            ipAddressesAndPorts.add(dbNode.getIpAddress() + ":" + dbNode.getPort() + dbNode.getType().name());
         }
         for (Node queueNode : queueLb.getNodes()) {
-            if (!ipAddressesAndPorts.add(queueNode.getIpAddress() + ":" + queueNode.getPort())) return true;
+            if (!ipAddressesAndPorts.add(queueNode.getIpAddress() + ":" + queueNode.getPort() + queueNode.getType().name())) return true;
         }
         return false;
     }
@@ -289,26 +288,23 @@ public class NodeServiceImpl extends BaseService implements NodeService {
     }
 
     @Override
-    public boolean nodeToDeleteIsNotLastActive(LoadBalancer lb, Node deleteNode) {
-        List<Node> nodeList = new ArrayList<Node>();
-        Node nNode = new Node();
-        for (Node tNode : lb.getNodes()) {
-            if (NodeCondition.ENABLED.equals(tNode.getCondition())) {
-                nodeList.add(tNode);
-            }
-            if (tNode.getId().equals(deleteNode.getId())) {
-                nNode.setCondition(tNode.getCondition());
+    public boolean isLastEnabledPrimaryNode(LoadBalancer dbLoadBalancer, Node nodeToMatch) {
+        boolean isLastEnabledPrimaryNode = false;
+        boolean isNodeToMatchEnabledAndPrimary = false;
+        List<Node> activePrimaryNodes = new ArrayList<Node>();
+
+        for (Node dbNode : dbLoadBalancer.getNodes()) {
+            if (NodeCondition.ENABLED.equals(dbNode.getCondition()) && NodeType.PRIMARY.equals(dbNode.getType())) {
+                activePrimaryNodes.add(dbNode);
+                if (dbNode.getId().equals(nodeToMatch.getId())) isNodeToMatchEnabledAndPrimary = true;
             }
         }
-        boolean isFalse;
-        isFalse = true;
-        if (NodeCondition.ENABLED.equals(nNode.getCondition())) {
-            if (!(nodeList.size() <= 1)) {
-                return true;
-            }
-            isFalse = false;
+
+        if (isNodeToMatchEnabledAndPrimary) {
+            isLastEnabledPrimaryNode = activePrimaryNodes.size() <= 1;
         }
-        return isFalse;
+
+        return isLastEnabledPrimaryNode;
     }
 
     private static boolean activeNodeCheck(LoadBalancer dbLb, Node n) {

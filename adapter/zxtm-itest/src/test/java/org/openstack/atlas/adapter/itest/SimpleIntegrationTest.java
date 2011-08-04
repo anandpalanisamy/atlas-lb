@@ -281,7 +281,7 @@ public class SimpleIntegrationTest extends ZeusTestBase {
     }
 
     private void removeNode() throws Exception {
-        zxtmAdapter.removeNode(config, lb.getId(), lb.getAccountId(), node2.getIpAddress(), node2.getPort());
+        zxtmAdapter.removeNode(config, lb.getId(), lb.getAccountId(), node2.getIpAddress(), node2.getPort(), node2.getType());
 
         final String[][] enabledNodes = getServiceStubs().getPoolBinding().getNodes(new String[]{poolName()});
         Assert.assertEquals(1, enabledNodes.length);

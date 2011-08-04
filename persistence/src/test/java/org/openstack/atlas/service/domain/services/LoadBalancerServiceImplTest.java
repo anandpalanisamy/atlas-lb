@@ -214,11 +214,11 @@ public class LoadBalancerServiceImplTest {
         }
 
         @Test(expected = BadRequestException.class)
-        public void shouldFailNodesTypeSecondary() throws BadRequestException {
+        public void shouldFailNodesTypeFailOver() throws BadRequestException {
             Set<Node> nodes = new HashSet<Node>();
             Node node1 = new Node();
 
-            node1.setType(NodeType.SECONDARY);
+            node1.setType(NodeType.FAIL_OVER);
 
             nodes.add(node1);
             lb.setNodes(nodes);

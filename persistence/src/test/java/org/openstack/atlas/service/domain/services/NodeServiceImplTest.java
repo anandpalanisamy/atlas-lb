@@ -107,22 +107,23 @@ public class NodeServiceImplTest {
         }
 
         @Test
-        public void shouldReturnFalseIfLastActive() {
-            Assert.assertFalse(nodeService.nodeToDeleteIsNotLastActive(lb,  node));
+        public void shouldReturnTrueIfLastActivePrimary() {
+            Assert.assertTrue(nodeService.isLastEnabledPrimaryNode(lb, node));
         }
 
         @Test
-        public void shouldReturnTrueIfNotLastActive() {
+        public void shouldReturnFalseIfNotLastActivePrimary() {
             node2.setCondition(NodeCondition.ENABLED);
+            node2.setType(NodeType.PRIMARY);
             lb.addNode(node2);
-            Assert.assertTrue(nodeService.nodeToDeleteIsNotLastActive(lb,  node));
+            Assert.assertFalse(nodeService.isLastEnabledPrimaryNode(lb, node));
         }
 
         @Test(expected = BadRequestException.class)
-        public void shouldFailIfUpdatingLastPrimaryToSecondary() throws BadRequestException {
+        public void shouldFailIfUpdatingLastPrimaryToFailOver() throws BadRequestException {
             node.setType(NodeType.PRIMARY);
             Node requestNode = new Node();
-            requestNode.setType(NodeType.SECONDARY);
+            requestNode.setType(NodeType.FAIL_OVER);
 
             nodeService.verifyNodeType(requestNode, node, lb);
         }

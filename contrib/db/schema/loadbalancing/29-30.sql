@@ -6,9 +6,9 @@ CREATE TABLE `node_type` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 insert into node_type values('PRIMARY');
-insert into node_type values('SECONDARY');
+insert into node_type values('FAIL_OVER');
 
-ALTER TABLE `node` ADD COLUMN `node_type` varchar(32) NOT NULL;
+ALTER TABLE `node` ADD COLUMN `node_type` varchar(32) NOT NULL DEFAULT 'PRIMARY';
 
 UPDATE `node` SET `node_type` = 'PRIMARY' WHERE `node_type` = "";
 

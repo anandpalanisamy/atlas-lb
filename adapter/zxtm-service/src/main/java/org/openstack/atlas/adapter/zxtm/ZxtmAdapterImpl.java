@@ -604,7 +604,7 @@ public class ZxtmAdapterImpl implements ReverseProxyLoadBalancerAdapter {
         final String primaryPoolName = ZxtmNameBuilder.generatePoolName(lbId, accountId, false);
         final String failOverPoolName = ZxtmNameBuilder.generatePoolName(lbId, accountId, true);
         List<Node> primaryNodes = NodeHelper.getNodesByType(nodes, NodeType.PRIMARY);
-        List<Node> failOverNodes = NodeHelper.getNodesByType(nodes, NodeType.SECONDARY);
+        List<Node> failOverNodes = NodeHelper.getNodesByType(nodes, NodeType.FAIL_OVER);
 
         if (primaryNodes.isEmpty()) {
             throw new InsufficientRequestException("No primary nodes given. Please provide at least one primary node.");
@@ -620,8 +620,19 @@ public class ZxtmAdapterImpl implements ReverseProxyLoadBalancerAdapter {
                 // TODO: Figure out error handling
             }
         } else {
+            removeFailOverPool(serviceStubs, primaryPoolName, failOverPoolName);
+        }
+    }
+
+    private void removeFailOverPool(ZxtmServiceStubs serviceStubs, String primaryPoolName, String failOverPoolName) throws RemoteException {
+        try {
+            LOG.debug(String.format("Removing fail-over pool '%s' from primary pool %s...", failOverPoolName, primaryPoolName));
             serviceStubs.getPoolBinding().setFailpool(new String[]{primaryPoolName}, new String[]{""});
+            LOG.debug(String.format("Fail-over pool '%s' successfully removed from primary pool %s.", failOverPoolName, primaryPoolName));
             deleteNodePool(serviceStubs, failOverPoolName);
+        } catch (RemoteException e) {
+            LOG.error(String.format("Failed to remove fail-over pool '%s' from primary pool %s.", failOverPoolName, primaryPoolName), e);
+            // TODO: Right now, the fail-over pool remains. Waiting on Zeus bug fix.
         }
     }
 
@@ -687,18 +698,28 @@ public class ZxtmAdapterImpl implements ReverseProxyLoadBalancerAdapter {
     @Override
     public void removeNodes(LoadBalancerEndpointConfiguration config, Integer lbId, Integer accountId, Collection<Node> nodes)
             throws AxisFault, InsufficientRequestException, ZxtmRollBackException {
+        ZxtmServiceStubs serviceStubs = getServiceStubs(config);
+        final String rollBackMessage = "Remove node request canceled.";
         final String primaryPoolName = ZxtmNameBuilder.generatePoolName(lbId, accountId, false);
         final String failOverPoolName = ZxtmNameBuilder.generatePoolName(lbId, accountId, true);
         List<Node> primaryNodes = NodeHelper.getNodesByType(nodes, NodeType.PRIMARY);
-        List<Node> failOverNodes = NodeHelper.getNodesByType(nodes, NodeType.SECONDARY);
+        List<Node> failOverNodes = NodeHelper.getNodesByType(nodes, NodeType.FAIL_OVER);
 
-        removeNodesForPool(config, primaryPoolName, primaryNodes);
-        removeNodesForPool(config, failOverPoolName, failOverNodes);
+        try {
+            removeNodesForPool(config, primaryPoolName, primaryNodes);
+            try {
+                removeNodesForPool(config, failOverPoolName, failOverNodes);
+            } catch (DeploymentError e) {
+                LOG.warn(String.format("Cannot delete last node in node pool '%s'.", failOverPoolName));
+                removeFailOverPool(serviceStubs, primaryPoolName, failOverPoolName);
+            }
+        } catch (Exception e) {
+            throw new ZxtmRollBackException(rollBackMessage, e);
+        }
     }
 
-    private void removeNodesForPool(LoadBalancerEndpointConfiguration config, String poolName, Collection<Node> nodes) throws AxisFault, InsufficientRequestException, ZxtmRollBackException {
+    private void removeNodesForPool(LoadBalancerEndpointConfiguration config, String poolName, Collection<Node> nodes) throws RemoteException, InsufficientRequestException, ZxtmRollBackException {
         ZxtmServiceStubs serviceStubs = getServiceStubs(config);
-        final String rollBackMessage = "Remove node request canceled.";
 
         try {
             String[][] ipAndPorts = NodeHelper.getIpAddressesFromNodes(nodes);
@@ -706,13 +727,11 @@ public class ZxtmAdapterImpl implements ReverseProxyLoadBalancerAdapter {
         } catch (ObjectDoesNotExist odne) {
             LOG.warn(String.format("Node pool '%s' for nodes %s does not exist.", poolName, NodeHelper.getNodeIdsStr(nodes)));
             LOG.warn(StringConverter.getExtendedStackTrace(odne));
-        } catch (Exception e) {
-            throw new ZxtmRollBackException(rollBackMessage, e);
         }
     }
 
     @Override
-    public void removeNode(LoadBalancerEndpointConfiguration config, Integer lbId, Integer accountId, String ipAddress, Integer port)
+    public void removeNode(LoadBalancerEndpointConfiguration config, Integer lbId, Integer accountId, String ipAddress, Integer port, NodeType nodeType)
             throws RemoteException, InsufficientRequestException, ZxtmRollBackException {
 
         ZxtmServiceStubs serviceStubs = getServiceStubs(config);
@@ -721,17 +740,25 @@ public class ZxtmAdapterImpl implements ReverseProxyLoadBalancerAdapter {
         final String rollBackMessage = "Remove node request canceled.";
 
         try {
-            try {
-                // TODO: Need to backup this node if failover throws a bad exception
-                serviceStubs.getPoolBinding().removeNodes(new String[]{primaryPoolName}, NodeHelper.buildNodeInfo(ipAddress, port));
-            } catch (ObjectDoesNotExist odne) {
-                LOG.warn(String.format("Node pool '%s' for node '%s:%d' does not exist.", primaryPoolName, ipAddress, port));
-            }
-
-            try {
-                serviceStubs.getPoolBinding().removeNodes(new String[]{failOverPoolName}, NodeHelper.buildNodeInfo(ipAddress, port));
-            } catch (ObjectDoesNotExist odne) {
-                LOG.warn(String.format("Node pool '%s' for node '%s:%d' does not exist.", failOverPoolName, ipAddress, port));
+            if(NodeType.PRIMARY.equals(nodeType)) {
+                try {
+                    LOG.warn(String.format("Removing node '%s:%d' from node pool '%s'...", ipAddress, port, primaryPoolName));
+                    serviceStubs.getPoolBinding().removeNodes(new String[]{primaryPoolName}, NodeHelper.buildNodeInfo(ipAddress, port));
+                    LOG.warn(String.format("Node '%s:%d' successfully removed from node pool '%s'.", ipAddress, port, primaryPoolName));
+                } catch (ObjectDoesNotExist odne) {
+                    LOG.warn(String.format("Node pool '%s' for node '%s:%d' does not exist.", primaryPoolName, ipAddress, port));
+                }
+            } else if(NodeType.FAIL_OVER.equals(nodeType)) {
+                try {
+                    LOG.warn(String.format("Removing node '%s:%d' from node pool '%s'...", ipAddress, port, failOverPoolName));
+                    serviceStubs.getPoolBinding().removeNodes(new String[]{failOverPoolName}, NodeHelper.buildNodeInfo(ipAddress, port));
+                    LOG.warn(String.format("Node '%s:%d' successfully removed from node pool '%s'.", ipAddress, port, failOverPoolName));
+                } catch (ObjectDoesNotExist odne) {
+                    LOG.warn(String.format("Node pool '%s' for node '%s:%d' does not exist.", failOverPoolName, ipAddress, port));
+                } catch (InvalidInput iie) {
+                    LOG.warn(String.format("Cannot delete last node in node pool '%s'.", failOverPoolName));
+                    removeFailOverPool(serviceStubs, primaryPoolName, failOverPoolName);
+                }
             }
         } catch (Exception e) {
             throw new ZxtmRollBackException(rollBackMessage, e);
@@ -743,7 +770,7 @@ public class ZxtmAdapterImpl implements ReverseProxyLoadBalancerAdapter {
         final String primaryPoolName = ZxtmNameBuilder.generatePoolName(lbId, accountId, false);
         final String failOverPoolName = ZxtmNameBuilder.generatePoolName(lbId, accountId, true);
         List<Node> primaryNodes = NodeHelper.getNodesByType(nodes, NodeType.PRIMARY);
-        List<Node> failOverNodes = NodeHelper.getNodesByType(nodes, NodeType.SECONDARY);
+        List<Node> failOverNodes = NodeHelper.getNodesByType(nodes, NodeType.FAIL_OVER);
 
         // TODO: Need to add backups and restore in case of exception
         setNodeWeightsForPool(config, primaryPoolName, primaryNodes);
@@ -1258,7 +1285,7 @@ public class ZxtmAdapterImpl implements ReverseProxyLoadBalancerAdapter {
         final String primaryPoolName = ZxtmNameBuilder.generatePoolName(loadBalancerId, accountId, false);
         final String failOverPoolName = ZxtmNameBuilder.generatePoolName(loadBalancerId, accountId, true);
         List<Node> primaryNodes = NodeHelper.getNodesByType(allNodes, NodeType.PRIMARY);
-        List<Node> failOverNodes = NodeHelper.getNodesByType(allNodes, NodeType.SECONDARY);
+        List<Node> failOverNodes = NodeHelper.getNodesByType(allNodes, NodeType.FAIL_OVER);
 
         if (primaryNodes.isEmpty())
             throw new InsufficientRequestException("No primary nodes given. Please provide at least one primary node.");

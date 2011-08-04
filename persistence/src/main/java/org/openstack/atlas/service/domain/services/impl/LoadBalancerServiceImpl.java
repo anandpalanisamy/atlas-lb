@@ -451,7 +451,7 @@ public class LoadBalancerServiceImpl extends BaseService implements LoadBalancer
                 node.setWeight(Constants.DEFAULT_NODE_WEIGHT);
             }
 
-            if (node.getType() != null && node.getType() == NodeType.SECONDARY) {
+            if (node.getType() != null && node.getType() == NodeType.FAIL_OVER) {
                 throw new BadRequestException("The node(s) must be specified as primary node(s) while creating a loadbalancer.");
             } else {
                 node.setType(NodeType.PRIMARY);
