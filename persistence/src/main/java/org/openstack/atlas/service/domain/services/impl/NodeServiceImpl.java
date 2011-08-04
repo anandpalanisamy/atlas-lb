@@ -193,14 +193,14 @@ public class NodeServiceImpl extends BaseService implements NodeService {
 
     @Override
     public void verifyNodeType(Node nodeToUpdate, Node nodeInDbToUpdate, LoadBalancer dbLoadBalancer) throws BadRequestException {
-        List<Node> currentNodes = getNodesByType(dbLoadBalancer.getNodes(), NodeType.PRIMARY);
+        List<Node> currentPrimaryNodes = getNodesByType(dbLoadBalancer.getNodes(), NodeType.PRIMARY);
         if (nodeToUpdate.getType() == NodeType.SECONDARY) {
-            if ((nodeInDbToUpdate != null && nodeInDbToUpdate.getType() == NodeType.PRIMARY) && currentNodes.size() <= 1) {
+            if ((nodeInDbToUpdate != null && nodeInDbToUpdate.getType() == NodeType.PRIMARY) && currentPrimaryNodes.size() <= 1) {
                 throw new BadRequestException("One primary node must remain as the last node.");
             }
         }
 
-        if ((nodeInDbToUpdate == null && nodeToUpdate.getType() == NodeType.PRIMARY) && currentNodes.size() <= 1) {
+        if ((nodeInDbToUpdate == null && nodeToUpdate.getType() == NodeType.PRIMARY) && currentPrimaryNodes.size() <= 1) {
                 throw new BadRequestException("One primary node must remain as the last node.");
         }
     }
@@ -344,6 +344,7 @@ public class NodeServiceImpl extends BaseService implements NodeService {
         return nodeRepository.getNodeMap(accountId, loadbalancerId);
     }
 
+    //TODO: refactor
     public List<String> prepareForNodesDeletion(Integer accountId,Integer loadBalancerId,List<Integer> ids) throws EntityNotFoundException{
             List<String> validationErrors = new ArrayList<String>();
             String format;
@@ -372,9 +373,17 @@ public class NodeServiceImpl extends BaseService implements NodeService {
             }
             if (survivingEnabledNodes.size() < 1) {
                 loadBalancerService.setStatus(dlb, LoadBalancerStatus.ACTIVE);
-                errMsg = "delete node operation would result in no Enabled nodes available. You must leave at least one node enabled";
+                errMsg = "Delete node operation would result in no Enabled nodes available. You must leave at least one node enabled";
                 validationErrors.add(errMsg);
             }
+
+            Set<Integer> primaryNodesAfterProcessing = nodeMap.nodesInTypeAfterDelete(NodeType.PRIMARY, idSet);
+            if (primaryNodesAfterProcessing.size() < 1) {
+                loadBalancerService.setStatus(dlb, LoadBalancerStatus.ACTIVE);
+                errMsg = "One primary node must leave at least one node enabled";
+                validationErrors.add(errMsg);
+            }
+
             return validationErrors;
     }
 

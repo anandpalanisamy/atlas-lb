@@ -3,6 +3,7 @@ package org.openstack.atlas.service.domain.services;
 import org.openstack.atlas.service.domain.entities.*;
 import org.openstack.atlas.service.domain.exceptions.BadRequestException;
 import org.openstack.atlas.service.domain.exceptions.EntityNotFoundException;
+import org.openstack.atlas.service.domain.pojos.NodeMap;
 import org.openstack.atlas.service.domain.repository.LoadBalancerRepository;
 import org.openstack.atlas.service.domain.repository.NodeRepository;
 import org.openstack.atlas.service.domain.services.impl.NodeServiceImpl;
@@ -145,6 +146,36 @@ public class NodeServiceImplTest {
             requestNode.setType(NodeType.SECONDARY);
 
             nodeService.verifyNodeType(requestNode, lb);
+        }
+
+        @Test
+        public void shouldFailIfBatchDeletingLastPrimary() throws BadRequestException {
+            node.setType(NodeType.PRIMARY);
+            node2.setType(NodeType.SECONDARY);
+            NodeMap nodeMap = new NodeMap();
+            nodeMap.addNode(node);
+            nodeMap.addNode(node2);
+            Set<Integer> idsToDelete = new HashSet<Integer>();
+            idsToDelete.add(node.getId());
+
+            Set<Integer> primaryNodesLeft = nodeMap.nodesInTypeAfterDelete(NodeType.PRIMARY, idsToDelete);
+            Assert.assertFalse(primaryNodesLeft.size() >= 1);
+
+        }
+
+        @Test
+        public void shouldPassIfNotBatchDeletingLastPrimary() throws BadRequestException {
+            node.setType(NodeType.PRIMARY);
+            node2.setType(NodeType.SECONDARY);
+            NodeMap nodeMap = new NodeMap();
+            nodeMap.addNode(node);
+            nodeMap.addNode(node2);
+            Set<Integer> idsToDelete = new HashSet<Integer>();
+            idsToDelete.add(node2.getId());
+
+            Set<Integer> primaryNodesLeft = nodeMap.nodesInTypeAfterDelete(NodeType.PRIMARY, idsToDelete);
+            Assert.assertTrue(primaryNodesLeft.size() >= 1);
+
         }
     }
 }

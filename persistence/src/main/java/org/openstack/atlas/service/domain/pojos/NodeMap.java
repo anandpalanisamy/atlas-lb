@@ -2,6 +2,8 @@ package org.openstack.atlas.service.domain.pojos;
 
 import org.openstack.atlas.service.domain.entities.Node;
 import org.openstack.atlas.service.domain.entities.NodeCondition;
+import org.openstack.atlas.service.domain.entities.NodeType;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -68,6 +70,18 @@ public class NodeMap {
         nodesThatWillSurvive.removeAll(doomedIds);
         for(Integer id: nodesThatWillSurvive){
             if(nodeHashMap.get(id).getCondition().equals(condition)) {
+                out.add(id);
+            }
+        }
+        return out;
+    }
+
+    public Set<Integer> nodesInTypeAfterDelete(NodeType type,Set<Integer> doomedIds){
+        Set<Integer> out = new HashSet<Integer>();
+        Set<Integer> nodesThatWillSurvive = getIds();
+        nodesThatWillSurvive.removeAll(doomedIds);
+        for(Integer id: nodesThatWillSurvive){
+            if(nodeHashMap.get(id).getType().equals(type)) {
                 out.add(id);
             }
         }
