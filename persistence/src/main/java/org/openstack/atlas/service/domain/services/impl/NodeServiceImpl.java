@@ -65,7 +65,7 @@ public class NodeServiceImpl extends BaseService implements NodeService {
     @Transactional
     @Override
     public LoadBalancer delNodes(LoadBalancer lb,Collection<Node> nodes){
-        LoadBalancer lbReturn = nodeRepository.delNodes(lb,nodes);
+        LoadBalancer lbReturn = nodeRepository.delNodes(lb, nodes);
         return lbReturn;
     }
 
@@ -192,21 +192,12 @@ public class NodeServiceImpl extends BaseService implements NodeService {
 
     @Override
     public void verifyNodeType(Node nodeToUpdate, Node nodeInDbToUpdate, LoadBalancer dbLoadBalancer) throws BadRequestException {
-        List<Node> currentPrimaryNodes = getNodesByType(dbLoadBalancer.getNodes(), NodeType.PRIMARY);
       if (nodeToUpdate.getType() == NodeType.FAIL_OVER) {
-            List<Node> currentNodes = getNodesByType(dbLoadBalancer.getNodes(), NodeType.PRIMARY);
-            if (nodeInDbToUpdate.getType() == NodeType.PRIMARY && currentNodes.size() <= 1) {
-                throw new BadRequestException("One primary node must remain as the last node.");
+            List<Node> currentPrimaryNodes = getNodesByType(dbLoadBalancer.getNodes(), NodeType.PRIMARY);
+            if (nodeInDbToUpdate.getType() == NodeType.PRIMARY && currentPrimaryNodes.size() <= 1) {
+                throw new BadRequestException("Cannot update the last primary node, one node must remain primary.");
             }
         }
-
-        if ((nodeInDbToUpdate == null && nodeToUpdate.getType() == NodeType.PRIMARY) && currentPrimaryNodes.size() <= 1) {
-                throw new BadRequestException("One primary node must remain as the last node.");
-        }
-    }
-
-    public void verifyNodeType(Node nodeToUpdate, LoadBalancer dbLoadBalancer) throws BadRequestException {
-        verifyNodeType(nodeToUpdate, null, dbLoadBalancer);
     }
 
     @Override
@@ -251,7 +242,6 @@ public class NodeServiceImpl extends BaseService implements NodeService {
             LOG.warn("Last node! Sending failure response back to client...");
             throw new UnprocessableEntityException("Last node on the load balancer. One or more nodes must remain configured as ENABLED.");
         }
-
 
         LOG.debug("Updating the lb status to pending_update");
         dbLoadBalancer.setStatus(LoadBalancerStatus.PENDING_UPDATE);
@@ -376,7 +366,7 @@ public class NodeServiceImpl extends BaseService implements NodeService {
             Set<Integer> primaryNodesAfterProcessing = nodeMap.nodesInTypeAfterDelete(NodeType.PRIMARY, idSet);
             if (primaryNodesAfterProcessing.size() < 1) {
                 loadBalancerService.setStatus(dlb, LoadBalancerStatus.ACTIVE);
-                errMsg = "One primary node must leave at least one node enabled";
+                errMsg = "Cannot delete the last primary node.";
                 validationErrors.add(errMsg);
             }
 
