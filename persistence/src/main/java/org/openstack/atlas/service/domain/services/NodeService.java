@@ -20,7 +20,7 @@ public interface NodeService {
 
     public LoadBalancer updateNode(LoadBalancer loadBalancer) throws EntityNotFoundException, ImmutableEntityException, UnprocessableEntityException, BadRequestException;
 
-    public void verifyNodeType(Node nodeToUpdate, Node nodeInDbToUpdate, LoadBalancer dbLoadBalancer) throws BadRequestException;
+    public void verifyNodeTypeIsNotLastPrimary(Node nodeToUpdate, Node nodeInDbToUpdate, LoadBalancer dbLoadBalancer) throws BadRequestException, UnprocessableEntityException;
 
     public List<Node> getNodesByType(Collection<Node> nodes, NodeType nodeType);
 

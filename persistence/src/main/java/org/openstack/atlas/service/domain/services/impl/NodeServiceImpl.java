@@ -174,7 +174,7 @@ public class NodeServiceImpl extends BaseService implements NodeService {
                     n.setWeight(nodeToUpdate.getWeight());
                 }
                 if(nodeToUpdate.getType() != null) {
-                    verifyNodeType(nodeToUpdate, n, dbLoadBalancer);
+                    verifyNodeTypeIsNotLastPrimary(nodeToUpdate, n, dbLoadBalancer);
                     n.setType(nodeToUpdate.getType());
                 }
                 n.setToBeUpdated(true);
@@ -191,11 +191,11 @@ public class NodeServiceImpl extends BaseService implements NodeService {
     }
 
     @Override
-    public void verifyNodeType(Node nodeToUpdate, Node nodeInDbToUpdate, LoadBalancer dbLoadBalancer) throws BadRequestException {
+    public void verifyNodeTypeIsNotLastPrimary(Node nodeToUpdate, Node nodeInDbToUpdate, LoadBalancer dbLoadBalancer) throws UnprocessableEntityException {
       if (nodeToUpdate.getType() == NodeType.FAIL_OVER) {
             List<Node> currentPrimaryNodes = getNodesByType(dbLoadBalancer.getNodes(), NodeType.PRIMARY);
             if (nodeInDbToUpdate.getType() == NodeType.PRIMARY && currentPrimaryNodes.size() <= 1) {
-                throw new BadRequestException("Cannot update the last primary node, one node must remain primary.");
+                throw new UnprocessableEntityException("Cannot update the last primary node, one node must remain primary.");
             }
         }
     }
