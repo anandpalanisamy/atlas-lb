@@ -17,5 +17,3 @@ ALTER TABLE `node` ADD
       FOREIGN KEY (node_type)
       REFERENCES node_type(name);
 
-UPDATE `meta` SET `meta_value` = '30' WHERE `meta_key`='version';
-
