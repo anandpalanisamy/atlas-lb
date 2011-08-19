@@ -1,17 +1,18 @@
 package org.openstack.atlas.api.mgmt.resources;
 
-import org.openstack.atlas.docs.loadbalancers.api.management.v1.LoadBalancers;
-import org.openstack.atlas.service.domain.entities.LoadBalancer;
-import org.openstack.atlas.service.domain.management.operations.EsbRequest;
-import org.openstack.atlas.service.domain.operations.Operation;
 import org.openstack.atlas.api.faults.HttpResponseBuilder;
 import org.openstack.atlas.api.helpers.ResponseFactory;
 import org.openstack.atlas.api.mgmt.helpers.CheckQueryParams;
 import org.openstack.atlas.api.mgmt.repository.ValidatorRepository;
 import org.openstack.atlas.api.mgmt.resources.providers.ManagementDependencyProvider;
 import org.openstack.atlas.api.mgmt.validation.contexts.ReassignHostContext;
-import org.openstack.atlas.util.ip.IPUtils;
 import org.openstack.atlas.api.validation.results.ValidatorResult;
+import org.openstack.atlas.docs.loadbalancers.api.management.v1.LoadBalancers;
+import org.openstack.atlas.service.domain.entities.LoadBalancer;
+import org.openstack.atlas.service.domain.exceptions.BadRequestException;
+import org.openstack.atlas.service.domain.management.operations.EsbRequest;
+import org.openstack.atlas.service.domain.operations.Operation;
+import org.openstack.atlas.util.ip.IPUtils;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.HttpHeaders;
@@ -40,6 +41,23 @@ public class LoadBalancersResource extends ManagementDependencyProvider {
     public AccountLimitsResource getAccountLimitsResource() {
         accountLimitsResource.setAccountId(accountId);
         return accountLimitsResource;
+    }
+
+    @PUT
+    @Path("sync")
+    public Response syncLoadBalancers(@QueryParam("id") List<String> loadBalancerIds) throws BadRequestException {
+        if (!isUserInRole("cp,ops,support")) {
+            return ResponseFactory.accessDenied();
+        }
+
+        if (loadBalancerIds.isEmpty() || loadBalancerIds.size() > 20) {
+            return Response.status(400).entity("May sync up to 20 load balancers at a time.").build();
+        }
+        else if (loadBalancerIds.size() >= 1) {
+            syncResource.setLoadBalancerIds(loadBalancerIds);
+        }
+
+        return syncResource.sync();
     }
 
     @PUT

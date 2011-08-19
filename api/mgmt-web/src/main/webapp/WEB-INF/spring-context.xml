@@ -193,8 +193,6 @@
                                   scope="request">
                                 <property name="virtualIpsResource" ref="mgmtVirtualIpsResource"/>
                                 <property name="errorpageResource"  ref="mgmtErrorPageResource"/>
-
-
                             </bean>
                         </property>
                     </bean>
@@ -217,6 +215,10 @@
             </bean>
         </property>
     </bean>
+    <bean id="syncResource"
+          class="org.openstack.atlas.api.mgmt.resources.SyncResource"
+          parent="managementDependencyProvider"
+          scope="request"/>
     <bean id="healthCheckResource"
           class="org.openstack.atlas.api.mgmt.resources.HealthCheckResource"
           parent="managementDependencyProvider"
@@ -282,6 +284,7 @@
           scope="request">
         <property name="loadBalancerResource" ref="loadBalancerResource"/>
         <property name="accountLimitsResource" ref="accountLimitsResource"/>
+        <property name="syncResource" ref="syncResource" />
     </bean>
 
 
@@ -300,11 +303,6 @@
         </property>
         <property name="loadBalancerSuspensionResource">
             <bean class="org.openstack.atlas.api.mgmt.resources.LoadBalancerSuspensionResource"
-                  parent="managementDependencyProvider"
-                  scope="request"/>
-        </property>
-        <property name="syncResource">
-            <bean class="org.openstack.atlas.api.mgmt.resources.SyncResource"
                   parent="managementDependencyProvider"
                   scope="request"/>
         </property>

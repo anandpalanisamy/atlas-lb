@@ -160,12 +160,6 @@ public class LoadBalancerResource extends ManagementDependencyProvider {
 
     }
 
-    @Path("sync")
-    public SyncResource retrieveSyncResource() {
-        syncResource.setLoadBalancerId(id);
-        return syncResource;
-    }
-
     @Path("suspension")
     public LoadBalancerSuspensionResource getLoadBalancerSuspensionResource() {
         loadBalancerSuspensionResource.setLoadBalancerId(id);

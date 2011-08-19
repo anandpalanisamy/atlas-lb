@@ -1,6 +1,14 @@
 package org.openstack.atlas.api.mgmt.resources.providers;
 
+import org.dozer.DozerBeanMapper;
 import org.openstack.atlas.api.faults.HttpResponseBuilder;
+import org.openstack.atlas.api.integration.AsyncService;
+import org.openstack.atlas.api.integration.ReverseProxyLoadBalancerService;
+import org.openstack.atlas.api.mgmt.helpers.LDAPTools.MossoAuthConfig;
+import org.openstack.atlas.api.mgmt.integration.ManagementAsyncService;
+import org.openstack.atlas.api.mgmt.resources.SyncResource;
+import org.openstack.atlas.api.resources.providers.RequestStateContainer;
+import org.openstack.atlas.cfg.Configuration;
 import org.openstack.atlas.docs.loadbalancers.api.management.v1.Host;
 import org.openstack.atlas.docs.loadbalancers.api.v1.faults.BadRequest;
 import org.openstack.atlas.service.domain.events.repository.AlertRepository;
@@ -8,14 +16,7 @@ import org.openstack.atlas.service.domain.events.repository.LoadBalancerEventRep
 import org.openstack.atlas.service.domain.repository.*;
 import org.openstack.atlas.service.domain.services.*;
 import org.openstack.atlas.service.domain.usage.repository.HostUsageRepository;
-import org.openstack.atlas.api.integration.AsyncService;
-import org.openstack.atlas.api.integration.ReverseProxyLoadBalancerService;
-import org.openstack.atlas.api.mgmt.helpers.LDAPTools.MossoAuthConfig;
-import org.openstack.atlas.api.mgmt.integration.ManagementAsyncService;
-import org.openstack.atlas.api.resources.providers.RequestStateContainer;
 import org.openstack.atlas.util.ip.IPv6;
-import org.dozer.DozerBeanMapper;
-import org.openstack.atlas.cfg.Configuration;
 
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -58,6 +59,7 @@ public class ManagementDependencyProvider {
     protected ClusterService clusterService;
     protected JobStateService jobStateService;
     protected Configuration configuration;
+    protected SyncResource syncResource;
 
     public static String getStackTraceMessage(Exception e) {
         StringBuffer sb = new StringBuffer();
@@ -154,6 +156,14 @@ public class ManagementDependencyProvider {
 
     public Configuration getConfiguration() {
         return configuration;
+    }
+
+    public void setSyncResource(SyncResource syncResource) {
+        this.syncResource = syncResource;
+    }
+
+    public SyncResource getSyncResource() {
+        return syncResource;
     }
 
     public ClusterRepository getClusterRepository() {
